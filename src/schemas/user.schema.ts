@@ -67,16 +67,26 @@ export const userSchema = z
 
 export const loginResponseSchema = z
   .object({
-    token: z.string().openapi({
-      description:
-        'Token JWT para autenticação nas próximas requisições. Deve ser enviado no header Authorization como "Bearer {token}"',
-      example:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyM2U0NTY3LWU4OWItMTJkMy1hNDU2LTQyNjYxNDE3NDAwMCIsImVtYWlsIjoiam9hby5zaWx2YUBleGFtcGxlLmNvbSIsImlhdCI6MTYzOTk5OTk5OSwiZXhwIjoxNjQwMDg2Mzk5fQ.dQw4w9WgXcQ",
+    user: z.object({
+      id: z.uuid().openapi({
+        description: "ID único do usuário",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      }),
+      name: z.string().openapi({
+        description: "Nome do usuário",
+        example: "João Silva",
+      }),
+      email: z.email().openapi({
+        description: "Email do usuário",
+        example: "joao.silva@example.com",
+      }),
+    }).openapi({
+      description: "Dados básicos do usuário autenticado",
     }),
   })
   .openapi("LoginResponse", {
     description:
-      "Resposta de login bem-sucedido contendo o token de autenticação",
+      "Resposta de login bem-sucedido. O token JWT é enviado via cookie httpOnly (não aparece no body da resposta por segurança).",
   });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;

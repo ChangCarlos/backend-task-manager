@@ -94,6 +94,7 @@ describe('User Service', () => {
 
       const mockUser = {
         id: 'user-id-123',
+        name: 'Test User',
         email: 'test@example.com',
         password: 'hashed-password',
       };
@@ -106,7 +107,14 @@ describe('User Service', () => {
 
       const result = await userService.login(loginData);
 
-      expect(result).toEqual({ token: mockToken });
+      expect(result).toEqual({ 
+        token: mockToken,
+        user: {
+          id: mockUser.id,
+          name: mockUser.name,
+          email: mockUser.email
+        }
+      });
       expect(jwt.sign).toHaveBeenCalledWith(
         {
           userId: mockUser.id,

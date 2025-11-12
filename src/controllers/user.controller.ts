@@ -17,7 +17,17 @@ export async function register(
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await userService.login(req.body);
-    return res.json(result);
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    } as const;
+    
+    res.cookie('token', result.token, cookieOptions);
+    
+    return res.json({ user: result.user });
   } catch (error) {
     return next(error);
   }
@@ -65,6 +75,25 @@ export async function changePassword(
       newPassword,
     );
     return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function logout(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/'
+    });
+    
+    return res.json({ message: 'Logout successful' });
   } catch (error) {
     return next(error);
   }

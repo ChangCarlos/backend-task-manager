@@ -39,7 +39,7 @@ export async function create(userData: {
 
 export async function login(
   userLogin: UserLogin,
-): Promise<{ token: string } | null> {
+): Promise<{ token: string; user: { id: string; name: string; email: string } }> {
   const user = await prisma.user.findUnique({
     where: { email: userLogin.email },
   });
@@ -65,7 +65,14 @@ export async function login(
     { expiresIn: "1h" },
   );
 
-  return { token };
+  return { 
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email
+    }
+  };
 }
 
 export async function getProfile(userId: string) {

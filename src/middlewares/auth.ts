@@ -8,22 +8,21 @@ export function authMiddleware(
   res: Response,
   next: NextFunction,
 ) {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies?.token || (() => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return null;
+    
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2) return null;
+    
+    const [scheme, token] = parts;
+    if (!/^Bearer$/i.test(scheme)) return null;
+    
+    return token;
+  })();
 
-  if (!authHeader) {
+  if (!token) {
     return next(new UnauthorizedError("No token provided"));
-  }
-
-  const parts = authHeader.split(" ");
-
-  if (parts.length !== 2) {
-    return next(new UnauthorizedError("Token error"));
-  }
-
-  const [scheme, token] = parts;
-
-  if (!/^Bearer$/i.test(scheme)) {
-    return next(new UnauthorizedError("Token malformatted"));
   }
 
   try {

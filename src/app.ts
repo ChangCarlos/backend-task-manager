@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import logger from "./logger";
 import taskRoutes from "./routes/task.routes";
@@ -22,6 +23,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(generalLimiter);

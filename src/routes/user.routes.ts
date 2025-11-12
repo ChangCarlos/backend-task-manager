@@ -15,6 +15,7 @@ const AuthLimiter = process.env.NODE_ENV !== 'test' ? authLimiter : (req: any, r
 
 router.post("/register", AuthLimiter, validate(createUserSchema), userController.register);
 router.post("/login", AuthLimiter, validate(loginUserSchema), userController.login);
+router.post("/logout", authMiddleware, userController.logout);
 
 router.get("/me", authMiddleware, userController.getProfile);
 router.put("/me", authMiddleware, validate(updateProfileSchema), userController.updateProfile);

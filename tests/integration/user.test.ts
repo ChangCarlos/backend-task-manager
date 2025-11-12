@@ -68,7 +68,16 @@ describe('Auth Endpoints', () => {
         })
         .expect(200);
 
-      expect(response.body).toHaveProperty('token');
+      expect(response.body).toHaveProperty('user');
+      expect(response.body.user).toHaveProperty('id');
+      expect(response.body.user).toHaveProperty('email', testUser.email);
+      expect(response.body.user).toHaveProperty('name');
+      
+      expect(response.headers['set-cookie']).toBeDefined();
+      const cookies = Array.isArray(response.headers['set-cookie']) 
+        ? response.headers['set-cookie'] 
+        : [response.headers['set-cookie']];
+      expect(cookies.some((cookie: string) => cookie.startsWith('token='))).toBe(true);
     });
 
     it('should return 401 for invalid email', async () => {
@@ -220,7 +229,8 @@ describe('User Profile Endpoints', () => {
         })
         .expect(200);
 
-      expect(loginResponse.body).toHaveProperty('token');
+      expect(loginResponse.body).toHaveProperty('user');
+      expect(loginResponse.body.user).toHaveProperty('email', testUser.email);
 
       testUser.password = passwordData.newPassword;
     });
