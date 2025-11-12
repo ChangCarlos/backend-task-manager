@@ -39,6 +39,9 @@ Documentação: http://localhost:3000/api-docs
 
 ## Testar a API
 
+> **Esta API usa httpOnly cookies para autenticação**  
+> Use Postman, Insomnia ou `curl -c/-b` para gerenciar cookies automaticamente.
+
 ### 1. Registrar usuário
 ```bash
 curl -X POST http://localhost:3000/api/users/register \
@@ -50,9 +53,11 @@ curl -X POST http://localhost:3000/api/users/register \
   }'
 ```
 
-### 2. Fazer login
+### 2. Fazer login (salvar cookies)
 ```bash
+# -c cookies.txt salva o cookie recebido
 curl -X POST http://localhost:3000/api/users/login \
+  -c cookies.txt \
   -H "Content-Type: application/json" \
   -d '{
     "email": "joao@example.com",
@@ -60,13 +65,14 @@ curl -X POST http://localhost:3000/api/users/login \
   }'
 ```
 
-**Copie o token retornado!**
+**O token é salvo automaticamente em `cookies.txt`!**
 
-### 3. Criar tarefa
+### 3. Criar tarefa (usando o cookie)
 ```bash
+# -b cookies.txt envia o cookie salvo
 curl -X POST http://localhost:3000/api/tasks \
+  -b cookies.txt \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   -d '{
     "title": "Minha primeira tarefa",
     "description": "Testar a API"
@@ -76,8 +82,11 @@ curl -X POST http://localhost:3000/api/tasks \
 ### 4. Listar tarefas
 ```bash
 curl -X GET "http://localhost:3000/api/tasks?page=1&limit=10" \
-  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+  -b cookies.txt
 ```
+
+### 💡 Dica: Use Postman para testes mais fáceis!
+O Postman gerencia cookies automaticamente. 
 
 ---
 

@@ -6,9 +6,10 @@ API REST completa para gerenciamento de tarefas com autenticação JWT, desenvol
 
 ### Autenticação e Autorização
 - Registro de usuários com hash de senha (bcrypt)
-- Login com JWT (expires em 1h)
+- Login com JWT via **httpOnly cookies** (mais seguro que localStorage)
 - Proteção de rotas com middleware de autenticação
 - Rate limiting em rotas de autenticação (5 tentativas/15min)
+- Token expira em 1 hora
 
 ### Gerenciamento de Tarefas
 - CRUD completo de tarefas
@@ -25,6 +26,8 @@ API REST completa para gerenciamento de tarefas com autenticação JWT, desenvol
 - Alterar senha (`PUT /api/users/me/password`)
 
 ### Segurança
+- **httpOnly cookies** - Proteção contra XSS (JavaScript não pode acessar o token)
+- **SameSite cookies** - Proteção contra CSRF
 - Helmet para headers HTTP seguros
 - CORS configurado para frontend específico
 - Rate limiting global (30 req/15min)
@@ -134,19 +137,26 @@ Content-Type: application/json
   "password": "senha123"
 }
 
-# Resposta:
+# Resposta (token enviado via httpOnly cookie):
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "user": {
+    "id": "uuid",
+    "name": "João Silva",
+    "email": "joao@example.com"
+  }
 }
 ```
 
 #### Tarefas (requer autenticação)
 
+> **Autenticação via httpOnly cookie** - Não precisa enviar token manualmente!  
+> Use ferramentas como Postman, Insomnia ou bibliotecas HTTP que suportam cookies.
+
 **Criar tarefa:**
 ```bash
 POST /api/tasks
-Authorization: Bearer {token}
 Content-Type: application/json
+Cookie: token={seu-cookie}
 
 {
   "title": "Comprar leite",
@@ -157,7 +167,7 @@ Content-Type: application/json
 **Listar tarefas com filtros:**
 ```bash
 GET /api/tasks?page=1&limit=20&search=comprar&completed=false&orderBy=createdAt&order=desc
-Authorization: Bearer {token}
+Cookie: token={seu-cookie}
 
 # Resposta:
 {
@@ -172,8 +182,8 @@ Authorization: Bearer {token}
 **Atualizar tarefa:**
 ```bash
 PUT /api/tasks/{id}
-Authorization: Bearer {token}
 Content-Type: application/json
+Cookie: token={seu-cookie}
 
 {
   "completed": true
@@ -183,7 +193,7 @@ Content-Type: application/json
 **Deletar tarefa:**
 ```bash
 DELETE /api/tasks/{id}
-Authorization: Bearer {token}
+Cookie: token={seu-cookie}
 ```
 
 #### Perfil (requer autenticação)
@@ -191,14 +201,14 @@ Authorization: Bearer {token}
 **Ver perfil:**
 ```bash
 GET /api/users/me
-Authorization: Bearer {token}
+Cookie: token={seu-cookie}
 ```
 
 **Atualizar perfil:**
 ```bash
 PUT /api/users/me
-Authorization: Bearer {token}
 Content-Type: application/json
+Cookie: token={seu-cookie}
 
 {
   "name": "João Silva Santos",
@@ -209,8 +219,8 @@ Content-Type: application/json
 **Alterar senha:**
 ```bash
 PUT /api/users/me/password
-Authorization: Bearer {token}
 Content-Type: application/json
+Cookie: token={seu-cookie}
 
 {
   "currentPassword": "senha123",
