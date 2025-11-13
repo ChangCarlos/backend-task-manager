@@ -9,7 +9,7 @@ export interface Task {
 
 export interface ListTasksParams {
   userId: string;
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   completed?: boolean;
@@ -17,10 +17,9 @@ export interface ListTasksParams {
   order?: "asc" | "desc";
 }
 
-export interface PaginatedTasks {
+export interface CursorPaginatedTasks {
   data: Task[];
-  total: number;
-  page: number;
+  nextCursor: string | null;
+  hasMore: boolean;
   limit: number;
-  totalPages: number;
 }

@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma";
-import { Task, ListTasksParams, PaginatedTasks } from "../interfaces/task.interface";
+import { Task, ListTasksParams, CursorPaginatedTasks } from "../interfaces/task.interface";
 import { NotFoundError, ForbiddenError } from "../utils/errors";
 
 export async function create(
@@ -21,18 +21,16 @@ export async function create(
 }
 
 
-export async function list(params: ListTasksParams): Promise<PaginatedTasks> {
+export async function list(params: ListTasksParams): Promise<CursorPaginatedTasks> {
   const {
     userId,
-    page = 1,
-    limit = 20,
+    cursor,
+    limit = 10,
     search,
     completed,
     orderBy = "createdAt",
     order = "desc",
   } = params;
-
-  const skip = (page - 1) * limit;
 
   const where: any = {
     userId,
@@ -49,24 +47,38 @@ export async function list(params: ListTasksParams): Promise<PaginatedTasks> {
     where.completed = completed;
   }
 
-  const [tasks, total] = await Promise.all([
-    prisma.task.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: {
-        [orderBy]: order,
-      },
-    }),
-    prisma.task.count({ where }),
-  ]);
+  if (cursor && (orderBy === "createdAt" || orderBy === "updatedAt")) {
+    try {
+      const cursorDate = new Date(cursor);
+      where[orderBy] = order === "desc" ? { lt: cursorDate } : { gt: cursorDate };
+    } catch (e) {
+    }
+  }
+
+  const tasks = await prisma.task.findMany({
+    where,
+    take: limit + 1,
+    orderBy: {
+      [orderBy]: order,
+    },
+  });
+
+  const hasMore = tasks.length > limit;
+  
+  const data = hasMore ? tasks.slice(0, limit) : tasks;
+  
+  let nextCursor: string | null = null;
+  if (hasMore && data.length > 0) {
+    const lastItem = data[data.length - 1];
+    const cursorValue = lastItem[orderBy];
+    nextCursor = cursorValue instanceof Date ? cursorValue.toISOString() : String(cursorValue);
+  }
 
   return {
-    data: tasks,
-    total,
-    page,
+    data,
+    nextCursor,
+    hasMore,
     limit,
-    totalPages: Math.ceil(total / limit),
   };
 }
 

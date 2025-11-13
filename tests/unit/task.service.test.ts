@@ -11,7 +11,6 @@ vi.mock('../../src/lib/prisma', () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
-      count: vi.fn(),
     },
   },
 }));
@@ -78,11 +77,10 @@ describe('Task Service', () => {
   });
 
   describe('list', () => {
-    it('should return paginated tasks for user', async () => {
+    it('should return cursor-paginated tasks for user', async () => {
       const userId = 'user-id-123';
       const params = {
         userId,
-        page: 1,
         limit: 10,
       };
 
@@ -108,16 +106,14 @@ describe('Task Service', () => {
       ];
 
       (prisma.task.findMany as any).mockResolvedValue(mockTasks);
-      (prisma.task.count as any).mockResolvedValue(2);
 
       const result = await taskService.list(params);
 
       expect(result).toEqual({
         data: mockTasks,
-        total: 2,
-        page: 1,
+        nextCursor: null,
+        hasMore: false,
         limit: 10,
-        totalPages: 1,
       });
     });
 
@@ -129,7 +125,6 @@ describe('Task Service', () => {
       };
 
       (prisma.task.findMany as any).mockResolvedValue([]);
-      (prisma.task.count as any).mockResolvedValue(0);
 
       await taskService.list(params);
 
@@ -154,7 +149,6 @@ describe('Task Service', () => {
       };
 
       (prisma.task.findMany as any).mockResolvedValue([]);
-      (prisma.task.count as any).mockResolvedValue(0);
 
       await taskService.list(params);
 
@@ -177,7 +171,6 @@ describe('Task Service', () => {
       };
 
       (prisma.task.findMany as any).mockResolvedValue([]);
-      (prisma.task.count as any).mockResolvedValue(0);
 
       await taskService.list(params);
 
