@@ -22,11 +22,11 @@ export async function getTasks(
 ) {
   try {
     const userId = req.user!.userId;
-    const { page, limit, search, completed, orderBy, order } = req.query;
+    const { cursor, limit, search, completed, orderBy, order } = req.query;
 
     const result = await service.list({
       userId,
-      page: page ? parseInt(page as string) : undefined,
+      cursor: cursor as string | undefined,
       limit: limit ? parseInt(limit as string) : undefined,
       search: search as string,
       completed: completed === "true" ? true : completed === "false" ? false : undefined,

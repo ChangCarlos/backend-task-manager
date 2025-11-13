@@ -125,17 +125,16 @@ describe('Task Endpoints', () => {
       });
     });
 
-    it('should return paginated tasks for authenticated user', async () => {
+    it('should return cursor-paginated tasks for authenticated user', async () => {
       const response = await request(app)
         .get('/api/tasks')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('data');
-      expect(response.body).toHaveProperty('total');
-      expect(response.body).toHaveProperty('page', 1);
+      expect(response.body).toHaveProperty('nextCursor');
+      expect(response.body).toHaveProperty('hasMore');
       expect(response.body).toHaveProperty('limit', 20);
-      expect(response.body).toHaveProperty('totalPages');
       expect(Array.isArray(response.body.data)).toBe(true);
       expect(response.body.data.length).toBeGreaterThan(0);
     });
@@ -165,15 +164,30 @@ describe('Task Endpoints', () => {
       expect(response.body.data.every((task: any) => task.completed === true)).toBe(true);
     });
 
-    it('should support pagination', async () => {
+    it('should support cursor-based pagination', async () => {
       const response = await request(app)
-        .get('/api/tasks?page=1&limit=2')
+        .get('/api/tasks?limit=2')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body.data.length).toBeLessThanOrEqual(2);
-      expect(response.body).toHaveProperty('page', 1);
       expect(response.body).toHaveProperty('limit', 2);
+      expect(response.body).toHaveProperty('hasMore');
+      expect(response.body).toHaveProperty('nextCursor');
+      
+      // If there are more results, test next page with cursor
+      if (response.body.hasMore && response.body.nextCursor) {
+        const nextResponse = await request(app)
+          .get(`/api/tasks?limit=2&cursor=${response.body.nextCursor}`)
+          .set('Authorization', `Bearer ${authToken}`)
+          .expect(200);
+        
+        expect(nextResponse.body.data.length).toBeGreaterThan(0);
+        // Ensure no duplicate results
+        const firstPageIds = response.body.data.map((t: any) => t.id);
+        const secondPageIds = nextResponse.body.data.map((t: any) => t.id);
+        expect(firstPageIds.some((id: string) => secondPageIds.includes(id))).toBe(false);
+      }
     });
 
     it('should return 401 without token', async () => {
